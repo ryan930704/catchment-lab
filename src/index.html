@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f5ee">
+  <meta name="description" content="Model how a rain garden changes stormwater runoff from a school, library, or courtyard.">
+  <title>Catchment Lab · Rain garden simulator</title>
+  <link rel="icon" href="./favicon.png" type="image/png">
+  <link rel="stylesheet" href="./styles.css">
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+  <a class="skip" href="#lab">Skip to simulator</a>
+  <header class="masthead">
+    <div class="shell masthead-inner">
+      <div class="brand"><span class="brand-mark" aria-hidden="true"><span></span></span>Catchment<span>Lab</span></div>
+      <button class="button secondary" type="button" id="open-method">Model guide <span aria-hidden="true">↗</span></button>
+    </div>
+  </header>
+  <main class="shell">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-media" aria-hidden="true"></div>
+      <div class="hero-content">
+        <p class="eyebrow">RAIN GARDEN SIMULATOR</p>
+        <h1 id="hero-title">Where does<br>the rain go?</h1>
+        <p>See how a rain garden changes the runoff from roofs and pavement, one storm at a time.</p>
+        <button class="button primary" id="load-demo" type="button">Load school demo <span aria-hidden="true">↓</span></button>
+      </div>
+    </section>
+
+    <section class="lab" id="lab" tabindex="-1" aria-labelledby="lab-title">
+      <div class="lab-heading">
+        <div><h2 id="lab-title">Run a scenario</h2><p class="muted">Start with a sample site or enter your own measurements.</p></div>
+        <div class="presets" role="group" aria-label="Sample sites">
+          <button type="button" data-preset="school" aria-pressed="true">School</button>
+          <button type="button" data-preset="library" aria-pressed="false">Library</button>
+          <button type="button" data-preset="courtyard" aria-pressed="false">Courtyard</button>
+        </div>
+      </div>
+
+      <div class="workspace">
+        <form class="panel inputs" id="scenario" aria-labelledby="input-title">
+          <h3 id="input-title">Site &amp; storm</h3>
+          <fieldset>
+            <legend>Catchment</legend>
+            <div class="fields">
+              <label>Roof area <span class="number"><input name="roof" type="number" min="0" max="10000" step="1" value="400" aria-description="Square meters" required><span aria-hidden="true">m²</span></span></label>
+              <label>Paved area <span class="number"><input name="paving" type="number" min="0" max="10000" step="1" value="240" aria-description="Square meters" required><span aria-hidden="true">m²</span></span></label>
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend>Rain event</legend>
+            <div class="fields">
+              <label>Total rainfall <span class="number"><input name="rain" type="number" min="0" max="300" step="0.1" value="42" aria-description="Millimeters" required><span aria-hidden="true">mm</span></span></label>
+              <label>Duration <select name="duration"><option value="30">30 min</option><option value="60">1 hour</option><option value="90">90 min</option><option value="120" selected>2 hours</option><option value="180">3 hours</option><option value="360">6 hours</option></select></label>
+              <label class="wide">Rainfall pattern <select name="pattern"><option value="steady">Steady rain</option><option value="peak" selected>Mid-storm peak</option><option value="early">Early burst</option></select></label>
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend>Rain garden</legend>
+            <div class="fields">
+              <label>Garden area <span class="number"><input name="area" type="number" min="0" max="500" step="1" value="85" aria-description="Square meters" required><span aria-hidden="true">m²</span></span></label>
+              <label>Ponding depth <span class="number"><input name="depth" type="number" min="0" max="500" step="1" value="120" aria-description="Millimeters" required><span aria-hidden="true">mm</span></span></label>
+              <label class="wide">Soil infiltration rate <span class="number"><input name="soil" type="number" min="0" max="300" step="0.1" value="16" aria-description="Millimeters per hour" required><span aria-hidden="true">mm/h</span></span></label>
+            </div>
+          </fieldset>
+          <p id="validation" class="validation" role="status" hidden></p>
+        </form>
+
+        <div class="results" aria-labelledby="result-title">
+          <section class="panel overview" aria-labelledby="result-title">
+            <div class="card-heading"><div><h3 id="result-title">Storm outcome</h3><p class="muted" id="summary">Modeling the school scenario…</p></div><span id="scenario-name" class="scenario-name">SCHOOL</span></div>
+            <div class="metrics">
+              <div><span>Baseline runoff</span><strong id="runoff">—</strong><small>Without a garden</small></div>
+              <div class="captured"><span>Runoff captured</span><strong id="capture">—</strong><small id="captured-volume">Stored or infiltrated</small></div>
+              <div><span>Drain discharge</span><strong id="overflow">—</strong><small id="overflow-time">Garden overflow</small></div>
+            </div>
+            <div class="balance" id="balance" aria-hidden="true"><span class="infiltrated"></span><span class="stored"></span><span class="spill"></span></div>
+            <ul class="legend balance-legend" aria-label="Where the runoff went">
+              <li><i class="infiltrated"></i> Infiltrated <b id="infiltrated-total"></b></li>
+              <li><i class="stored"></i> Stored at storm end <b id="stored-total"></b></li>
+              <li><i class="spill"></i> Overflowed <b id="spill-total"></b></li>
+            </ul>
+          </section>
+
+          <section class="panel chart-panel" aria-labelledby="chart-title">
+            <div class="card-heading chart-heading">
+              <div><h3 id="chart-title">Runoff over time</h3><p class="muted" id="chart-subtitle">Runoff routed to the drain per 5-minute interval.</p></div>
+              <div class="presets compact" role="group" aria-label="Chart view">
+                <button type="button" data-chart="drain" aria-pressed="true">Discharge</button>
+                <button type="button" data-chart="storage" aria-pressed="false">Storage</button>
+              </div>
+            </div>
+            <ul class="legend chart-legend" id="chart-legend" aria-hidden="true"><li><i class="baseline"></i> Without garden</li><li><i class="spill"></i> With garden</li></ul>
+            <canvas id="chart" aria-hidden="true"></canvas>
+            <div class="chart-footer"><details id="raw-data"><summary>View interval data</summary><div class="table-wrap" tabindex="0" role="region" aria-label="Scrollable five-minute model data"><table><caption>Five-minute water balance</caption><thead><tr><th scope="col">Minute</th><th scope="col">Rain (mm)</th><th scope="col">Baseline (L)</th><th scope="col">Overflow (L)</th><th scope="col">Stored (L)</th><th scope="col">Infiltrated (L)</th></tr></thead><tbody id="intervals"></tbody></table></div></details><button type="button" id="export" class="text-button">Download CSV <span aria-hidden="true">↓</span></button></div>
+          </section>
+
+          <section class="panel planner" aria-labelledby="plan-title">
+            <div><h3 id="plan-title">Size for a capture target</h3><p class="muted">Find the smallest whole-square-meter garden for this storm.</p></div>
+            <div class="plan-controls"><label for="target">Target</label><select id="target"><option value="0.5">50%</option><option value="0.75" selected>75%</option><option value="0.9">90%</option><option value="1">100%</option></select><strong id="suggestion">—</strong><button type="button" class="button secondary" id="use-area">Apply area</button></div>
+            <p id="plan-note" class="muted plan-note"></p>
+          </section>
+        </div>
+      </div>
+      <p class="sr-only" id="announcement" role="status"></p>
+    </section>
+    <footer><span>Catchment Lab</span><span>Scenario estimates for STEM learning and early planning.</span></footer>
+  </main>
+  <dialog id="method" aria-labelledby="method-title">
+    <div class="dialog-head"><h2 id="method-title">How the model works</h2><form method="dialog"><button class="button secondary" autofocus>Close</button></form></div>
+    <ol>
+      <li><strong>Route the runoff.</strong> Every 5 minutes, rainfall in mm is multiplied by effective catchment area in m² to get liters. The example model uses fixed runoff coefficients of 0.95 for roofs and 0.80 for pavement.</li>
+      <li><strong>Balance the water.</strong> Add runoff to the previous stored volume. Infiltrate up to the soil rate times the garden area for that interval, store up to area times ponding depth, then send the excess to the drain.</li>
+      <li><strong>Compare and size.</strong> The baseline sends all modeled runoff directly to the drain. Capture is storm-time infiltration plus water still stored at storm end. The size finder searches 0–500 m², keeping soil rate and depth fixed.</li>
+    </ol>
+    <p>The model starts with an empty garden and omits rainfall directly on the bed, upstream losses beyond the runoff coefficients, and pipe or underdrain hydraulics. Rainfall patterns and sample sites are synthetic. Use measured inputs and professional site assessment for construction decisions.</p>
+  </dialog>
+</body>
+</html>
